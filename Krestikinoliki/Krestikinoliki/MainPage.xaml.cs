@@ -50,7 +50,7 @@ namespace Krestikinoliki
             
             grid.Children.Add(newGame, 0, 3);
             Grid.SetColumnSpan(newGame, 2);
-            randomPlayer = new Button { Text = "Новая игра" };
+            randomPlayer = new Button { Text = "Новая игра!" };
             grid.Children.Add(randomPlayer, 2, 3);
             Grid.SetColumnSpan(randomPlayer, 2);
             randomPlayer.Clicked += Randomplayer_Clicked;
