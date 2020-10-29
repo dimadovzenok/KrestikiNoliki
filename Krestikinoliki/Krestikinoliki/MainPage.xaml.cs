@@ -9,111 +9,259 @@ using Xamarin.Forms.Xaml;
 namespace Krestikinoliki
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class MainPage : ContentPage
+    public partial class MainPage: ContentPage
     {
+        Label[,] KrestikNolik = new Label[3, 3];
+        string l;
         public MainPage()
         {
-            FirstPlayer_manual();
-            NewGame_Clicked();
+            Reset();
+            stps = 0;
         }
-        BoxView box;
-        Label stat;
+        Label stat, info;
         Button newGame, randomPlayer;
-        public bool first_player;
-        
-        void NewGame_Clicked()
+
+        void Reset()
         {
             Grid grid = new Grid();
-            for (int g = 0; g < 4; g++)
+            for (int g = 0; g < 3; g++)
             {
+                BackgroundColor = Color.LightGray;
                 grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             }
             for (int f = 0; f < 3; f++)
             {
                 grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             }
-
-
+            randomPlayer = new Button
+            {
+                BackgroundColor = Color.BurlyWood,
+                BorderWidth = 2,
+                BorderColor = Color.Gray,
+                FontSize = 25,
+                Text = "Изменить начинающего",
+                TextColor = Color.White
+            };
+            randomPlayer.Clicked += randomPlayer_Clicked;
+            newGame = new Button
+            {
+                BackgroundColor = Color.BurlyWood,
+                BorderWidth = 2,
+                BorderColor = Color.Gray,
+                FontSize = 25,
+                Text = "Новая игра",
+                TextColor = Color.White
+            };
+            newGame.Clicked += newGame_Clicked;
+            info = new Label
+            {
+                FontSize = 30,
+                TextColor = Color.Gray,
+                Text = "",
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalTextAlignment = TextAlignment.Center
+            };
 
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    box = new BoxView {Color=Color.FromRgb(0, 0, 0)};
-                    grid.Children.Add(box, i, j);
+                    stat = new Label
+                    {
+                        BackgroundColor = Color.Gray,
+                        FontSize = 120,
+                        Text = "",
+                        HorizontalTextAlignment = TextAlignment.Center,
+                        TextColor = Color.LightGray,
+                        VerticalTextAlignment = TextAlignment.Center,
+                    };
+                    KrestikNolik[i, j] = stat;
+                    l = "X";
                     var tap = new TapGestureRecognizer();
-                    box.GestureRecognizers.Add(tap);
                     tap.Tapped += Tap_Tapped;
+                    grid.Children.Add(stat, i, j);
+                    stat.GestureRecognizers.Add(tap);
                 }
             }
-            newGame = new Button { Text = "Кто первый?" };
-            
-            grid.Children.Add(newGame, 0, 3);
-            Grid.SetColumnSpan(newGame, 2);
-            randomPlayer = new Button { Text = "Новая игра!" };
-            grid.Children.Add(randomPlayer, 2, 3);
-            Grid.SetColumnSpan(randomPlayer, 2);
-            randomPlayer.Clicked += Randomplayer_Clicked;
+            grid.Children.Add(randomPlayer, 0, 3);
+            grid.Children.Add(newGame, 2, 3);
+            grid.Children.Add(info, 1, 3);
             Content = grid;
-
         }
         private void newGame_Clicked(object sender, EventArgs e)
         {
-            FirstPlayer_manual();
-            NewGame_Clicked();
+            Reset();
+            chck = 0;
+            stps = 0;
         }
-        private void Randomplayer_Clicked(object sender, EventArgs e)
-        {
-            FirstPlayer();
-            NewGame_Clicked();
-        }
-        BoxView box_clik;
         private void Tap_Tapped(object sender, EventArgs e)
         {
-            {
-                box_clik = sender as BoxView;
-                if (box_clik.Color == Color.FromRgb(0, 0, 0) && first_player)
-                {
-                    box_clik.Color = Color.FromRgb(255, 0, 0);
-                    first_player = false;
-                }
-                else if (box_clik.Color == Color.FromRgb(0, 0, 0) && !first_player)
-                {
-                    box_clik.Color = Color.FromRgb(0, 255, 0);
-                    first_player = true;
-                }
-                else
-                {
-                    DisplayAlert("Сообщение", "Противник уже выбрал это поле", "Ok");
-                }
-            };
-        }
+            Label stat = sender as Label;
+            if (stat.Text == "")
 
-        Random rnd = new Random();
-        private bool FirstPlayer()
-        {
-            int player = rnd.Next(0, 2);
-            if (player == 1)
+                if (chck % 2 == 0)
+                {
+                    info.Text = "Начинает 0";
+                    stat.Text = l;
+                    chck++;
+                    stps++;
+                }
+                else if (chck % 2 != 0)
+                {
+                    info.Text = "Начинает Х";
+                    chck++;
+                    stps++;
+                    stat.Text = "0";
+                }
+
+            if (checkDraw() == true)
             {
-                first_player = true;
+                DisplayAlert("Конец игры", wnr, "Новая игра");
+                stps = 0;
+            }
+
+            else if (checkWinnerY() == true)
+            {
+                DisplayAlert("Конец игры", wnr, "Новая игра");
+            }
+            else if (checkWinnerX() == true)
+            {
+                DisplayAlert("Конец игры", wnr, "Новая игра");
+            }
+        }
+        bool checkDraw()
+        {
+            if (stps == 9)
+            {
+                return true;
             }
             else
             {
-                first_player = false;
+                return false;
             }
-            return first_player;
         }
-
-        public async void FirstPlayer_manual()
+        string wnr = "";
+        bool checkWinnerX()
         {
-            string first_player_manual = await DisplayPromptAsync("Кто первый?", "Красный -1, Зеленый -2", initialValue: "1", maxLength: 1, keyboard: Keyboard.Numeric);
-            if (first_player_manual == "1")
+            if (KrestikNolik[0, 0].Text == "X" && KrestikNolik[1, 0].Text == "X" && KrestikNolik[2, 0].Text == "X")
             {
-                first_player = true;
+                wnr = "Выйграл Х";
+                return true; ;
+            }
+            else if (KrestikNolik[0, 1].Text == "X" && KrestikNolik[1, 1].Text == "X" && KrestikNolik[2, 1].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true;
+            }
+            else if (KrestikNolik[0, 2].Text == "X" && KrestikNolik[1, 2].Text == "X" && KrestikNolik[2, 2].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true;
+            }
+            else if (KrestikNolik[0, 0].Text == "0" && KrestikNolik[1, 0].Text == "0" && KrestikNolik[2, 0].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true; ;
+            }
+            else if (KrestikNolik[0, 1].Text == "0" && KrestikNolik[1, 1].Text == "0" && KrestikNolik[2, 1].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true;
+            }
+            else if (KrestikNolik[0, 2].Text == "0" && KrestikNolik[1, 2].Text == "0" && KrestikNolik[2, 2].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true;
             }
             else
             {
-                first_player = false;
+                return false;
+            }
+        }
+        bool checkWinnerY()
+        {
+
+            if (KrestikNolik[0, 0].Text == "X" && KrestikNolik[0, 1].Text == "X" && KrestikNolik[0, 2].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true; ;
+            }
+
+            else if (KrestikNolik[1, 0].Text == "X" && KrestikNolik[1, 1].Text == "X" && KrestikNolik[1, 2].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true;
+            }
+
+            else if (KrestikNolik[2, 0].Text == "X" && KrestikNolik[2, 1].Text == "X" && KrestikNolik[2, 2].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true;
+            }
+
+            else if (KrestikNolik[0, 0].Text == "0" && KrestikNolik[0, 1].Text == "0" && KrestikNolik[0, 2].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true; ;
+            }
+
+            else if (KrestikNolik[1, 0].Text == "0" && KrestikNolik[1, 1].Text == "0" && KrestikNolik[1, 2].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true;
+            }
+
+            else if (KrestikNolik[2, 0].Text == "0" && KrestikNolik[2, 1].Text == "X" && KrestikNolik[2, 2].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        bool checkWinnerXY()
+        {
+            if (KrestikNolik[0, 0].Text == "X" && KrestikNolik[1, 1].Text == "X" && KrestikNolik[2, 2].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true; ;
+            }
+            else if (KrestikNolik[2, 0].Text == "X" && KrestikNolik[1, 1].Text == "X" && KrestikNolik[0, 2].Text == "X")
+            {
+                wnr = "Выйграл Х";
+                return true;
+            }
+            else if (KrestikNolik[0, 0].Text == "0" && KrestikNolik[1, 1].Text == "0" && KrestikNolik[2, 2].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true; ;
+            }
+            else if (KrestikNolik[2, 0].Text == "0" && KrestikNolik[1, 1].Text == "0" && KrestikNolik[0, 2].Text == "0")
+            {
+                wnr = "Выйграл 0";
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        int stps = 0;
+
+        Random strt = new Random();
+        int chck = 0;
+        private void randomPlayer_Clicked(object sender, EventArgs e)
+        {
+            chck = strt.Next(0, 2);
+            if (chck % 2 == 0)
+            {
+                info.Text = "Начинает Х";
+            }
+            else if (chck % 2 != 0)
+            {
+                info.Text = "Начинает 0";
             }
         }
     }
